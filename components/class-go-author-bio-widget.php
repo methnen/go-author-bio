@@ -38,6 +38,12 @@ class GO_Author_Bio_Widget extends WP_Widget
 
 		$data = go_author_bio()->author_data( $author->ID );
 
+		//set some kind of 'sanity' threshold minimum data
+		if ( empty( $data['email'] ) || empty( $data['name'] ) )
+		{
+			return;
+		}//end if
+
 		echo $args['before_widget'];
 		include __DIR__ . '/templates/bio.php';
 		echo $args['after_widget'];
