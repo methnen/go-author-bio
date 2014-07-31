@@ -20,10 +20,9 @@
 		$shortcodes = '';
 
 		//twitter icon
-		$twitter = esc_html( $data['twitter'] );
-		if ( ! empty( $twitter ) )
+		if ( ! empty( $data['twitter'] ) )
 		{
-			$shortcodes .= '[social-icon service="twitter" dest="@' . $twitter . '" round="true"]';
+			$shortcodes .= '[social-icon service="twitter" dest="@' . esc_html( $data['twitter'] ) . '" round="true"]';
 		}//end if
 
 		//RSS icon
@@ -39,10 +38,9 @@
 		?>
 	</div>
 	<?php
-	$bio = wp_kses_post( $data['bio'] );
-	if ( ! empty( $bio ) )
+	if ( ! empty( $data['bio'] ) )
 	{
-		echo '<p>' . $bio . '</p>';
+		echo '<p>' . wp_kses_post( $bio ) . '</p>';
 	}//end if
 	?>
 </section>
