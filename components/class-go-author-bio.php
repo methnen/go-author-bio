@@ -37,13 +37,20 @@ class GO_Author_Bio
 			'avatar' => NULL,
 			'bio' => get_the_author_meta( 'description', $user_id ),
 			'email' => get_the_author_meta( 'user_email', $user_id ),
-			'feed' => add_query_arg( array( 'feed' => 'atom' ), get_author_posts_url( $user_id ) ),
+			'feed' => NULL,
 			'name' => get_the_author_meta( 'display_name', $user_id ),
-			'title' => apply_filters( 'go_user_profile_get_meta', NULL, 'title' ),
+			'title' => NULL,
 			'twitter' => NULL,
+			'url' => get_author_posts_url( $user_id ),
 		);
 
+		$profile_data = apply_filters( 'go_user_profile_get_meta', array(), $user_id );
+
+		$data['title'] = ! empty( $profile_data['title'] ) ? $profile_data['title'] : NULL;
+
 		$data['avatar'] = get_avatar( $data['email'], 96, '', $data['name'] );
+
+		$data['feed'] = "{$data['url']}feed/";
 
 		if ( function_exists( 'go_local_keyring' ) )
 		{
@@ -55,7 +62,7 @@ class GO_Author_Bio
 
 			$twitter = go_local_keyring()->keyring()->get_token_store()->get_token( $args );
 
-			if ( $twitter )
+			if ( ! empty( $twitter ) )
 			{
 				$data['twitter'] = $twitter->meta['username'];
 			}//end if
