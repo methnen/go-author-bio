@@ -40,7 +40,7 @@
 	<?php
 	if ( ! empty( $data['bio'] ) )
 	{
-		echo '<p>' . wp_kses_post( $bio ) . '</p>';
+		echo '<p>' . wp_kses_post( $data['bio'] ) . '</p>';
 	}//end if
 	?>
 </section>
