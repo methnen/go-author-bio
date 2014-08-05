@@ -28,8 +28,11 @@
 		//RSS icon
 		$shortcodes .= '<a class="goicon icon-rss-circled" itemprop="url" href="' . esc_html( $data['feed'] ) . '"></a>';
 
-		//email icon/contact form
-		$shortcodes .= '[go_contact email="' . esc_html( $data['email'] ) . '" form="about" submit="Continue"]';
+		if ( $data['show_email'] )
+		{
+			//email icon/contact form
+			$shortcodes .= '[go_contact email="' . esc_html( $data['email'] ) . '" form="about" submit="Continue"]';
+		}//end if
 
 		if ( ! empty( $shortcodes ) )
 		{
