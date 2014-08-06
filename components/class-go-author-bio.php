@@ -95,24 +95,20 @@ class GO_Author_Bio
 		$last_post_query = new WP_Query(
 			array(
 				'author'           => $user_id,
-				'date_query'       => array(
-					'after' => date( $this->not_current ),
-				),
 				'posts_per_page'   => 1,
 				'post_status'      => 'publish',
 				'post_type'        => 'post',
 			)
 		);
 
-		$last_date = 0;
-
-		if ( isset( $last_post_query->posts[0] ) )
+		if ( ! isset( $last_post_query->posts[0]->post_date ) )
 		{
-			if ( isset( $last_post_query->posts[0]->post_date ) )
-			{
-				$last_date = $last_post_query->posts[0]->post_date;
-			}//end if
-		}
+			$last_date = 0;
+		}//end if
+		else
+		{
+			$last_date = $last_post_query->posts[0]->post_date;
+		}//end else
 
 		//cache this in user meta for faster checking next time
 		update_user_meta(
