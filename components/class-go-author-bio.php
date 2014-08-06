@@ -2,6 +2,9 @@
 
 class GO_Author_Bio
 {
+	private $user_meta_key = 'go-author-bio-last-post';
+	private $ttl = 933120000; //3 days
+	private $not_current = 15768000000;//6 months
 	/**
 	 * constructor
 	 */
@@ -68,8 +71,57 @@ class GO_Author_Bio
 			}//end if
 		}//end if
 
+		$data['show_email'] = ( time() - $this->not_current ) < $this->last_post_date( $user_id );
+
 		return $data;
 	}//end author_data
+
+	/**
+	 * Get the last post date for an author
+	 * @param  (int) $user_id The author's user ID
+	 * @return (int) timestamp of last post date
+	 */
+	private function last_post_date( $user_id )
+	{
+		$last_post_info = get_the_author_meta( $this->user_meta_key, $user_id );
+
+		//if we have timely data stored, use it
+		if ( ! empty( $last_post_info ) && ( time() - $this->ttl ) < $last_post_info['date_checked'] )
+		{
+			return (int) $last_post_info['post_date'];
+		}//end if
+
+		//WP_Query for last post
+		$last_post_query = new WP_Query(
+			array(
+				'author'           => $user_id,
+				'posts_per_page'   => 1,
+				'post_status'      => 'publish',
+				'post_type'        => 'post',
+			)
+		);
+
+		if ( ! isset( $last_post_query->posts[0]->post_date ) )
+		{
+			$last_date = 0;
+		}//end if
+		else
+		{
+			$last_date = $last_post_query->posts[0]->post_date;
+		}//end else
+
+		//cache this in user meta for faster checking next time
+		update_user_meta(
+			$user_id,
+			$this->user_meta_key,
+			array(
+				'post_date'    => strtotime( $last_date ),
+				'date_checked' => time(),
+			)
+		);
+
+		return (int) $last_date;
+	}//end last_post_date
 }//end class
 
 function go_author_bio()
