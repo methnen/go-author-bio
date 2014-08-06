@@ -3,7 +3,7 @@
 class GO_Author_Bio
 {
 	private $user_meta_key = 'go-author-bio-last-post';
-	private $ttl = 1000;//933120000; //3 days
+	private $ttl = 933120000; //3 days
 	private $not_current = 15768000000;//6 months
 	/**
 	 * constructor
@@ -86,46 +86,46 @@ class GO_Author_Bio
 		$last_post_info = get_the_author_meta( $this->user_meta_key, $user_id );
 
 		//if we have timely data stored, use it
-		if ( ! empty( $last_post_info ) && ( time() - $this->ttl ) > $last_post_info['date_checked'] )
+		if ( ! empty( $last_post_info ) && ( time() - $this->ttl ) < $last_post_info['date_checked'] )
 		{
-			return $last_post_info['post_date'];
+			return (int) $last_post_info['post_date'];
 		}//end if
 
-		$last_post = $this->get_last_post( $user_id );
-
-		//while we're doing this, we need to update the author's metadata
-		$meta = array(
-			'post_date'    => strtotime( $last_post->post_date ),
-			'date_checked' => time(),
+		//WP_Query for last post
+		$last_post_query = new WP_Query(
+			array(
+				'author'           => $user_id,
+				'date_query'       => array(
+					'after' => date( $this->not_current ),
+				),
+				'posts_per_page'   => 1,
+				'post_status'      => 'publish',
+				'post_type'        => 'post',
+			)
 		);
-		//update the meta data
-		update_user_meta( $user_id, $this->user_meta_key, $meta );
 
-		return $last_post->post_date;
+		$last_date = 0;
+
+		if ( isset( $last_post_query->posts[0] ) )
+		{
+			if ( isset( $last_post_query->posts[0]->post_date ) )
+			{
+				$last_date = $last_post_query->posts[0]->post_date;
+			}//end if
+		}
+
+		//cache this in user meta for faster checking next time
+		update_user_meta(
+			$user_id,
+			$this->user_meta_key,
+			array(
+				'post_date'    => strtotime( $last_date ),
+				'date_checked' => time(),
+			)
+		);
+
+		return (int) $last_date;
 	}//end last_post_date
-
-	/**
-	 * Utility function to get the last post by an author by user ID
-	 * @param  (int) $user_id The author's user ID
-	 * @return (object) $last_post The post object
-	 */
-	private function get_last_post( $user_id )
-	{
-		$args = array(
-			'author'           => $user_id,
-			'date_query'       => array(
-				'after' => date( strtotime( '-6 months' ) ),
-			),
-			'posts_per_page'   => 1,
-			'post_status'      => 'publish',
-			'post_type'        => 'post',
-		);
-
-		$last_post_query = new WP_Query( $args );
-		$last_post = $last_post_query->posts[0];
-
-		return $last_post;
-	}//end get_last_post
 }//end class
 
 function go_author_bio()
