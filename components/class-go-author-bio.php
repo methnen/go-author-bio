@@ -69,38 +69,70 @@ class GO_Author_Bio
 			}//end if
 		}//end if
 
-		$last_post = get_the_author_meta( $this->user_meta_key, $user_id );
+		$last_post_info = get_the_author_meta( $this->user_meta_key, $user_id );
 
 		//no meta value, find it and set it
-		if ( empty( $last_post ) )
+		if ( empty( $last_post_info ) )
 		{
-			//set the flag for our template
-			$data['show_email'] = $this->last_post_date( $user_id );
+			//set the flag for our template and update user meta
+			$data['show_email'] = $this->current_post_check( $user_id );
 		}//end if
-		elseif ( strtotime( '-3 days' ) > strtotime( $last_post['date_checked'] ) )
+		// our last check was  > 3 days ago, recheck
+		elseif ( ( time() - 933120000 ) > $last_post_info['date_checked'] )
 		{
-			//if we've got a post recent enough, let's not hit the database
-			if ( strtotime( '-6 months' ) < strtotime( $last_post['post_date'] ) )
+			//let's only hit the database if our stored post date is too old
+			if ( strtotime( '-6 months' ) < $last_post_info['post_date'] )
 			{
-				$data['show_email'] = 1;
+				//set the flag for our template
+				$data['show_email'] = $last_post_info['is_current'];
 			}//end if
 			else
 			{
-				$data['show_email'] = $this->last_post_date( $user_id );
+				//set the flag for our template and update user meta
+				$data['show_email'] = $this->current_post_check( $user_id );
 			}//end else
 		}//end elseif
 		else
 		{
 			//set the flag for our template
-			$data['show_email'] = 1;
+			$data['show_email'] = $last_post_info['is_current'];
 		}//end else
 
 		return $data;
 	}//end author_data
 
-	public function last_post_date( $user_id )
+	/**
+	 * Check the author's last post for currency and update the user meta
+	 * @param  (int) $user_id The author's user ID
+	 * @return (boolean) $current Is the authors' last post current
+	 */
+	private function current_post_check( $user_id )
 	{
-		//get last post
+		$last_post = $this->get_last_post( $user_id );
+
+		//is post older than 6 moths?
+		$current = strtotime( '-6 months' ) < $last_post->post_date;
+
+		//while we're doing this, we need to update the author's metadata
+		$this->update_user_meta(
+			$user_id,
+			array(
+				'is_current'   => $current,
+				'post_date'    => strtotime( $last_post->post_date ),
+			)
+		);
+
+		//send back the boolean for our flag
+		return $current;
+	}//end current_post_check
+
+	/**
+	 * Utility function to get the last post by an author by user ID
+	 * @param  (int) $user_id The author's user ID
+	 * @return (object) $last_post The post object
+	 */
+	private function get_last_post( $user_id )
+	{
 		$args = array(
 			'author'           => $user_id,
 			'date_query'       => array(
@@ -111,28 +143,27 @@ class GO_Author_Bio
 			'post_type'        => 'post',
 		);
 
-		$last_post_query = null;
 		$last_post_query = new WP_Query( $args );
-
 		$last_post = $last_post_query->posts[0];
 
-		//count results, use as our flag value ( should be 0 or 1 )
-		$current = count( $last_post_query );
-		//just in case we don't get back a post
-		$post_date = ( ! empty( $last_post_query->posts[0]->post_date ) ) ? $last_post_query->posts[0]->post_date : '';
+		return $last_post;
+	}//end get_last_post
 
-		$meta_value = array(
-			'date_checked' => date( 'Y-m-d H:i:s' ),
-			'is_current'   => $current,
-			'post_date'    => $post_date,
-		);
+	/**
+	 * Utility function to update the author's metadata
+	 * @param  (int) $user_id The author's user ID
+	 * @param  (array) $meta Array of values to store
+	 *                 is_current - is last post less than 6 months old
+	 *                 post_date - timestamp of the last post post_date
+	 */
+	private function update_user_meta( $user_id, $meta )
+	{
+		//add the date checked
+		$meta['date_checked'] = time();
 
 		//update the meta data
-		update_user_meta( $user_id, $this->user_meta_key, $meta_value );
-
-		//send back the boolean for our flag
-		return $current;
-	}//end last_post_date
+		update_user_meta( $user_id, $this->user_meta_key, $meta );
+	}//end update_user_meta
 }//end class
 
 function go_author_bio()
