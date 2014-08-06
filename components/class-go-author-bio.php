@@ -3,6 +3,8 @@
 class GO_Author_Bio
 {
 	private $user_meta_key = 'go-author-bio-last-post';
+	private $ttl = 1000;//933120000; //3 days
+	private $not_current = 15768000000;//6 months
 	/**
 	 * constructor
 	 */
@@ -69,62 +71,38 @@ class GO_Author_Bio
 			}//end if
 		}//end if
 
-		$last_post_info = get_the_author_meta( $this->user_meta_key, $user_id );
-
-		//no meta value, find it and set it
-		if ( empty( $last_post_info ) )
-		{
-			//set the flag for our template and update user meta
-			$data['show_email'] = $this->current_post_check( $user_id );
-		}//end if
-		// our last check was  > 3 days ago, recheck
-		elseif ( ( time() - 933120000 ) > $last_post_info['date_checked'] )
-		{
-			//let's only hit the database if our stored post date is too old
-			if ( strtotime( '-6 months' ) < $last_post_info['post_date'] )
-			{
-				//set the flag for our template
-				$data['show_email'] = $last_post_info['is_current'];
-			}//end if
-			else
-			{
-				//set the flag for our template and update user meta
-				$data['show_email'] = $this->current_post_check( $user_id );
-			}//end else
-		}//end elseif
-		else
-		{
-			//set the flag for our template
-			$data['show_email'] = $last_post_info['is_current'];
-		}//end else
+		$data['show_email'] = ( time() - $this->not_current ) < $this->last_post_date( $user_id );
 
 		return $data;
 	}//end author_data
 
 	/**
-	 * Check the author's last post for currency and update the user meta
+	 * Get the last post date for an author
 	 * @param  (int) $user_id The author's user ID
-	 * @return (boolean) $current Is the authors' last post current
+	 * @return (int) timestamp of last post date
 	 */
-	private function current_post_check( $user_id )
+	private function last_post_date( $user_id )
 	{
+		$last_post_info = get_the_author_meta( $this->user_meta_key, $user_id );
+
+		//if we have timely data stored, use it
+		if ( ! empty( $last_post_info ) && ( time() - $this->ttl ) > $last_post_info['date_checked'] )
+		{
+			return $last_post_info['post_date'];
+		}//end if
+
 		$last_post = $this->get_last_post( $user_id );
 
-		//is post older than 6 moths?
-		$current = strtotime( '-6 months' ) < $last_post->post_date;
-
 		//while we're doing this, we need to update the author's metadata
-		$this->update_user_meta(
-			$user_id,
-			array(
-				'is_current'   => $current,
-				'post_date'    => strtotime( $last_post->post_date ),
-			)
+		$meta = array(
+			'post_date'    => strtotime( $last_post->post_date ),
+			'date_checked' => time(),
 		);
+		//update the meta data
+		update_user_meta( $user_id, $this->user_meta_key, $meta );
 
-		//send back the boolean for our flag
-		return $current;
-	}//end current_post_check
+		return $last_post->post_date;
+	}//end last_post_date
 
 	/**
 	 * Utility function to get the last post by an author by user ID
@@ -148,22 +126,6 @@ class GO_Author_Bio
 
 		return $last_post;
 	}//end get_last_post
-
-	/**
-	 * Utility function to update the author's metadata
-	 * @param  (int) $user_id The author's user ID
-	 * @param  (array) $meta Array of values to store
-	 *                 is_current - is last post less than 6 months old
-	 *                 post_date - timestamp of the last post post_date
-	 */
-	private function update_user_meta( $user_id, $meta )
-	{
-		//add the date checked
-		$meta['date_checked'] = time();
-
-		//update the meta data
-		update_user_meta( $user_id, $this->user_meta_key, $meta );
-	}//end update_user_meta
 }//end class
 
 function go_author_bio()
