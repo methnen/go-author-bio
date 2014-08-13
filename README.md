@@ -1,13 +1,13 @@
-#GO Author Bio Widget
+#GO Author Bio
 
 A widget to show information about the author and improve the SEO value of the page.
 
 ##Requirements
-###uses:
-* [go-user-profile](https://github.com/GigaOM/gigaom-plugins/tree/master/go-user-profile) information, but fails gracefully if any or all of it is not available
+###*Requires:*
+* [go-contact](https://github.com/GigaOM/go-contact) and by association, [go-recaptcha](https://github.com/GigaOM/go-recaptcha)
 
-###*requires:*
-* [go-contact] and by association, [go-recaptcha]
+###uses:
+* [go-user-profile](https://github.com/GigaOM/gigaom-plugins/tree/master/go-user-profile) data, but fails gracefully if any or all of it is not available
 
 
 ##Addresses the following tickets:
