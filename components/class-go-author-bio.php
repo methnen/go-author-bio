@@ -143,7 +143,7 @@ class GO_Author_Bio
 			}//end if
 		}//end if
 
-		$data['show_email'] = ( time() - $this->not_current ) < $this->last_post_date( $user_id );
+		$data['show_email'] = ! empty( $data['email'] ) && ( time() - $this->not_current ) < $this->last_post_date( $user_id );
 
 		return $data;
 	}//end author_data
