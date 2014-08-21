@@ -4,86 +4,14 @@ class GO_Author_Bio
 {
 	private $user_meta_key = 'go-author-bio-last-post';
 	private $ttl = 933120000; //3 days
-	private $not_current = 15768000000;//6 months
-	private $dependencies = array(
-		'go-contact' => 'https://github.com/GigaOM/go-contact',
-	);
-	private $missing_dependencies = array();
+	private $not_current = 15552000;//6 30-day months
 	/**
 	 * constructor
 	 */
 	public function __construct()
 	{
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
-
-		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
-		add_action( 'admin_init', array( $this, 'admin_init' ) );
 	}//end __construct
-
-	public function admin_menu_init()
-	{
-		$this->check_dependencies();
-
-		if ( $this->missing_dependencies )
-		{
-			return;
-		}//end if
-	}//end admin_menu_init
-
-	public function admin_init()
-	{
-		$this->check_dependencies();
-
-		if ( $this->missing_dependencies )
-		{
-			return;
-		}//end if
-	}//end admin_init
-
-	/**
-	 * check plugin dependencies
-	 */
-	public function check_dependencies()
-	{
-		foreach ( $this->dependencies as $dependency => $url )
-		{
-			if ( function_exists( str_replace( '-', '_', $dependency ) ) )
-			{
-				continue;
-			}//end if
-
-			$this->missing_dependencies[ $dependency ] = $url;
-		}//end foreach
-
-		if ( $this->missing_dependencies )
-		{
-			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
-		}//end if
-	}//end check_dependencies
-
-	/**
-	 * hooked to the admin_notices action to inject a message if depenencies are not activated
-	 */
-	public function admin_notices()
-	{
-		?>
-		<div class="error">
-			<p>
-				You must <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>">activate</a> the following plugins before using <code>go-author-bio</code> plugin:
-			</p>
-			<ul>
-				<?php
-				foreach ( $this->missing_dependencies as $dependency => $url )
-				{
-					?>
-					<li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $dependency ); ?></a></li>
-					<?php
-				}//end foreach
-				?>
-			</ul>
-		</div>
-		<?php
-	}//end admin_notices
 
 	/**
 	 * initializes widgets
