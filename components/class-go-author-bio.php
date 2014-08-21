@@ -4,7 +4,7 @@ class GO_Author_Bio
 {
 	private $user_meta_key = 'go-author-bio-last-post';
 	private $ttl = 933120000; //3 days
-	private $not_current = 15768000000;//6 months
+	private $not_current = 15552000;//6 30-day months
 	/**
 	 * constructor
 	 */
