@@ -26,7 +26,7 @@
 		}//end if
 
 		//RSS icon
-		$shortcodes .= '<a class="goicon icon-rss-circled" itemprop="url" href="' . esc_html( $data['feed'] ) . '"></a>';
+		$shortcodes .= '<a class="goicon icon-rss-circled" itemprop="url" href="' . esc_html( $data['feed'] ) . '" title="RSS feed"></a>';
 
 		if ( ! empty( $data['show_email'] ) && function_exists( 'go_contact' ) )
 		{
