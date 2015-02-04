@@ -11,6 +11,7 @@ class GO_Author_Bio
 	public function __construct()
 	{
 		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
+		add_filter( 'go_metadata_description', array( $this, 'go_metadata_description' ) );
 	}//end __construct
 
 	/**
@@ -122,6 +123,63 @@ class GO_Author_Bio
 
 		return (int) $last_date;
 	}//end last_post_date
+
+	/**
+	 * Checks if the current query is for an author and returns the author if possible
+	 */
+	public function get_author()
+	{
+		global $wp_query;
+
+		// bail if we aren't looking at the author taxonomy
+		if ( ! $wp_query->is_author )
+		{
+			return FALSE;
+		}//end if
+
+		$author = ! empty( $wp_query->query['author_name'] ) ? $wp_query->query['author_name'] : apply_filters( 'go_author_bio_author', NULL );
+
+		if ( ! $author )
+		{
+			return FALSE;
+		}//end if
+
+		$author = get_user_by( 'slug', $author );
+
+		// bail if we couldn't find an author by the provided slug
+		if ( ! $author )
+		{
+			return FALSE;
+		}//end if
+
+		return $author;
+	} // END get_author
+
+	/**
+	 * Filter go_metadata_description and return a description if possible
+	 */
+	public function go_metadata_description( $description )
+	{
+		// Is this a query for an author?
+		if ( ! $author = $this->get_author() )
+		{
+			return $description;
+		} // END if
+
+		// Do we have any author data?
+		if ( ! $data = go_author_bio()->author_data( $author->ID ) )
+		{
+			return $description;
+		} // END if
+
+		// Do we have a bio?
+		if ( '' == $data['bio'] )
+		{
+			return $description;
+		} // END if
+
+		return $data['bio'];
+	} // END go_metadata_description
 }//end class
 
 function go_author_bio()
