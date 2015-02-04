@@ -167,7 +167,7 @@ class GO_Author_Bio
 		} // END if
 
 		// Do we have any author data?
-		if ( ! $data = go_author_bio()->author_data( $author->ID ) )
+		if ( ! $data = $this->author_data( $author->ID ) )
 		{
 			return $description;
 		} // END if
