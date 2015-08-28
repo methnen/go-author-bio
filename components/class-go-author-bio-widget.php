@@ -20,9 +20,24 @@ class GO_Author_Bio_Widget extends WP_Widget
 	 */
 	public function widget( $args, $unused_instance )
 	{
-		$author = go_author_bio()->get_author();
+		global $wp_query;
 
-		// bail if we couldn't find an author
+		// bail if we aren't looking at the author taxonomy
+		if ( ! $wp_query->is_author )
+		{
+			return;
+		}//end if
+
+		$author = ! empty( $wp_query->query['author_name'] ) ? $wp_query->query['author_name'] : apply_filters( 'go_author_bio_author', NULL );
+
+		if ( ! $author )
+		{
+			return;
+		}//end if
+
+		$author = get_user_by( 'slug', $author );
+
+		// bail if we couldn't find an author by the provided slug
 		if ( ! $author )
 		{
 			return;
